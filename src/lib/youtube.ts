@@ -20,7 +20,174 @@ const NICHES = [
   "Education",
   "Finance",
   "Travel",
+  "Comedy",
+  "Music",
+  "Entertainment",
+  "News",
+  "Sports",
 ];
+
+function detectNiche(title: string = "", description: string = ""): string {
+  const text = `${title} ${description}`.toLowerCase();
+
+  const categories: Record<string, string[]> = {
+    Comedy: [
+      "comedian",
+      "comedy",
+      "stand up",
+      "stand-up",
+      "standup",
+      "comic",
+      "humor",
+      "humour",
+      "sketch",
+      "roast",
+      "satire",
+      "funny",
+    ],
+
+    Gaming: [
+      "gaming",
+      "gamer",
+      "gameplay",
+      "playstation",
+      "xbox",
+      "minecraft",
+      "valorant",
+      "pubg",
+      "bgmi",
+      "fortnite",
+    ],
+
+    Tech: [
+      "technology",
+      "tech",
+      "software",
+      "programming",
+      "coding",
+      "developer",
+      "gadgets",
+      "smartphone",
+      "iphone",
+      "android",
+      "computer",
+    ],
+
+    Beauty: [
+      "beauty",
+      "makeup",
+      "skincare",
+      "cosmetics",
+      "haircare",
+      "makeup artist",
+    ],
+
+    Fitness: [
+      "fitness",
+      "workout",
+      "gym",
+      "bodybuilding",
+      "exercise",
+      "trainer",
+      "nutrition",
+    ],
+
+    Food: [
+      "food",
+      "cooking",
+      "recipe",
+      "chef",
+      "restaurant",
+      "baking",
+      "cuisine",
+      "foodie",
+    ],
+
+    Fashion: [
+      "fashion",
+      "style",
+      "styling",
+      "outfit",
+      "clothing",
+      "streetwear",
+      "designer",
+    ],
+
+    Music: [
+      "music",
+      "singer",
+      "songwriter",
+      "rapper",
+      "musician",
+      "producer",
+      "dj",
+      "songs",
+    ],
+
+    Education: [
+      "education",
+      "educational",
+      "teacher",
+      "tutorial",
+      "learning",
+      "course",
+      "lectures",
+      "study",
+    ],
+
+    Finance: [
+      "finance",
+      "investing",
+      "investment",
+      "stocks",
+      "trading",
+      "crypto",
+      "money",
+      "personal finance",
+    ],
+
+    Sports: [
+      "sports",
+      "cricket",
+      "football",
+      "basketball",
+      "tennis",
+      "athlete",
+      "esports",
+    ],
+
+    Travel: [
+      "travel",
+      "travelling",
+      "traveling",
+      "vlog",
+      "tour",
+      "adventure",
+      "backpacking",
+      "explore",
+    ],
+  };
+
+  let bestCategory = "Entertainment";
+  let bestScore = 0;
+
+  for (const [category, keywords] of Object.entries(categories)) {
+    let score = 0;
+
+    for (const keyword of keywords) {
+      if (text.includes(keyword)) {
+        score++;
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestCategory = category;
+    }
+  }
+
+  return bestCategory;
+}
 
 // Simple seeded PRNG so mock data is stable per-handle instead of random
 // on every render.
@@ -155,8 +322,8 @@ export async function fetchCreatorByHandle(
     const cleanHandle = query.startsWith("@") ? query : `@${query}`;
     try {
       const byHandle = await ytFetch("channels", {
-        part: "id,snippet,statistics",
-        forHandle: cleanHandle.replace("@", ""),
+        part: "id,snippet,statistics,contentDetails",
+        forHandle: cleanHandle,
       });
       if (byHandle.items?.length) {
         return mapChannelToProfile(byHandle.items[0], await fetchRecentEngagement(byHandle.items[0].id));
@@ -184,8 +351,8 @@ export async function fetchCreatorByHandle(
     const engagement = await fetchRecentEngagement(channel.id);
     return mapChannelToProfile(channel, engagement);
   } catch (err) {
-    console.warn("YouTube fetch failed, falling back to modeled data:", err);
-    return buildMockCreator(query);
+  console.error("YouTube API request failed:", err);
+  throw err;
   }
 }
 
@@ -273,7 +440,10 @@ function mapChannelToProfile(
     botPct,
     engagementConsistency: Math.round(40 + authenticityScore * 0.5),
     growthHealth: Math.round(35 + authenticityScore * 0.55),
-    niche: NICHES[seedFromString(channel.id) % NICHES.length],
+    niche: detectNiche(
+      snippet.title,
+      snippet.description
+    ),
     source: "youtube",
   };
 }
