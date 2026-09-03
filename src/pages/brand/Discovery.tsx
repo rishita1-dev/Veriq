@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Bookmark, BookmarkCheck, Loader2, AlertCircle } from "lucide-react";
+import { Search, Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 import { AppShell } from "../../components/AppShell";
 import { fmtNumber, ProgressBar, ScoreRing } from "../../components/Shared";
 import { useApp } from "../../context/AppContext";
 import {
-  buildMockDiscoveryFeed,
   computeCompatibility,
   fetchCreatorByHandle,
-  isYoutubeConfigured,
+  fetchCreatorsByCategory,
 } from "../../lib/youtube";
 import { BRAND_NAV } from "./nav";
 import type { CreatorProfile } from "../../lib/types";
@@ -23,8 +22,42 @@ export default function Discovery() {
   const [selected, setSelected] = useState<CreatorProfile | null>(null);
 
   useEffect(() => {
-    setFeed(buildMockDiscoveryFeed("discovery-" + brand.category, 8));
-  }, [brand.category]);
+  let cancelled = false;
+
+  async function loadCreators() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const creators = await fetchCreatorsByCategory(
+        brand.category,
+        8
+      );
+
+      if (!cancelled) {
+        setFeed(creators);
+      }
+    } catch (e: any) {
+      if (!cancelled) {
+        setFeed([]);
+        setError(
+          e.message ??
+            "Unable to load creator recommendations."
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }
+  }
+
+  loadCreators();
+
+  return () => {
+    cancelled = true;
+  };
+}, [brand.category]);
 
   const runSearch = async (q: string) => {
     if (!q.trim()) return;
@@ -77,14 +110,8 @@ export default function Discovery() {
           {loading ? <Loader2 size={16} className="animate-spin" /> : "Search"}
         </button>
       </form>
-      {!isYoutubeConfigured() && (
-        <p className="text-xs text-brand-amber flex items-center gap-1.5 mb-6">
-          <AlertCircle size={13} /> No YouTube API key configured — showing modeled data. Add
-          VITE_YOUTUBE_API_KEY to your .env to pull live channel stats.
-        </p>
-      )}
+      
       {error && <p className="text-xs text-brand-red mb-6">{error}</p>}
-      {isYoutubeConfigured() && !error && <div className="mb-6" />}
 
       {selected && compatibility && (
         <div className="card p-7 mb-10 grid lg:grid-cols-[auto_1fr_auto] gap-8 items-center">

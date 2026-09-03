@@ -339,15 +339,18 @@ export async function fetchCreatorByHandle(
       maxResults: "1",
     });
     channelId = search.items?.[0]?.snippet?.channelId ?? search.items?.[0]?.id?.channelId;
-    if (!channelId) return buildMockCreator(query);
+    if (!channelId) {
+      throw new Error("No YouTube channel found for this search.");
+}
 
     const channelRes = await ytFetch("channels", {
       part: "id,snippet,statistics",
       id: channelId,
     });
     const channel = channelRes.items?.[0];
-    if (!channel) return buildMockCreator(query);
-
+    if (!channel) {
+      throw new Error("YouTube channel data could not be retrieved.");
+}
     const engagement = await fetchRecentEngagement(channel.id);
     return mapChannelToProfile(channel, engagement);
   } catch (err) {
@@ -378,10 +381,16 @@ async function fetchRecentEngagement(channelId: string) {
     if (!videoIds) return { avgViews: 0, engagementRate: 0 };
 
     const videosRes = await ytFetch("videos", {
-      part: "statistics",
+      part: "statistics,snippet",
       id: videoIds,
     });
-    const stats = (videosRes.items ?? []).map((v: any) => v.statistics);
+    const videos = videosRes.items ?? [];
+
+    const stats = videos.map((v: any) => v.statistics);
+
+    const videoTitles = videos.map(
+      (v: any) => v.snippet?.title ?? ""
+    );
     const views = stats.map((s: any) => Number(s.viewCount ?? 0));
     const likes = stats.map((s: any) => Number(s.likeCount ?? 0));
     const comments = stats.map((s: any) => Number(s.commentCount ?? 0));
@@ -395,15 +404,23 @@ async function fetchRecentEngagement(channelId: string) {
     const totalViews = views.reduce((a: number, b: number) => a + b, 0);
     const engagementRate = totalViews > 0 ? (totalInteractions / totalViews) * 100 : 0;
 
-    return { avgViews: Math.round(avgViews), engagementRate: Math.round(engagementRate * 100) / 100 };
+    return { avgViews: Math.round(avgViews), engagementRate: Math.round(engagementRate * 100) / 100,videoTitles,};
   } catch {
-    return { avgViews: 0, engagementRate: 0 };
+    return {
+      avgViews: 0,
+      engagementRate: 0,
+      videoTitles: [],
+    };
   }
 }
 
 function mapChannelToProfile(
   channel: any,
-  engagement: { avgViews: number; engagementRate: number }
+  engagement: {
+    avgViews: number;
+    engagementRate: number;
+    videoTitles: string[];
+  }
 ): CreatorProfile {
   const stats = channel.statistics ?? {};
   const snippet = channel.snippet ?? {};
@@ -442,10 +459,80 @@ function mapChannelToProfile(
     growthHealth: Math.round(35 + authenticityScore * 0.55),
     niche: detectNiche(
       snippet.title,
-      snippet.description
+      snippet.description,
+      engagement.videoTitles
     ),
     source: "youtube",
   };
+}
+
+export async function fetchCreatorsByCategory(
+  category: string,
+  count = 8
+): Promise<CreatorProfile[]> {
+  if (!YT_API_KEY) {
+    throw new Error("YouTube API key not configured");
+  }
+
+  const searchTerms: Record<string, string> = {
+    Comedy: "comedy comedian",
+    Tech: "technology tech",
+    Beauty: "beauty makeup",
+    Fitness: "fitness workout",
+    Gaming: "gaming",
+    Food: "food cooking",
+    Fashion: "fashion style",
+    Lifestyle: "lifestyle",
+    Education: "education learning",
+    Finance: "finance investing",
+    Travel: "travel vlog",
+    Music: "music singer",
+    Entertainment: "entertainment",
+    Sports: "sports",
+    News: "news",
+  };
+
+  const searchQuery = searchTerms[category] ?? category;
+
+  const search = await ytFetch("search", {
+    part: "snippet",
+    q: searchQuery,
+    type: "channel",
+    maxResults: String(Math.min(count * 2, 25)),
+  });
+
+  const channelIds = (search.items ?? [])
+    .map(
+      (item: any) =>
+        item.snippet?.channelId ?? item.id?.channelId
+    )
+    .filter(Boolean)
+    .slice(0, count);
+
+  if (!channelIds.length) {
+    return [];
+  }
+
+  const channelRes = await ytFetch("channels", {
+    part: "id,snippet,statistics,contentDetails",
+    id: channelIds.join(","),
+  });
+
+  const creators = await Promise.all(
+    (channelRes.items ?? []).map(async (channel: any) => {
+      const engagement = await fetchRecentEngagement(channel.id);
+
+      return mapChannelToProfile(channel, engagement);
+    })
+  );
+
+  return creators
+    .filter(Boolean)
+    .sort(
+      (a, b) =>
+        b.authenticityScore - a.authenticityScore
+    )
+    .slice(0, count);
 }
 
 export function computeCompatibility(

@@ -99,40 +99,98 @@ export function ScoreRing({
 }) {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress = circumference - (score / 100) * circumference;
-  const color = score >= 85 ? "#34d399" : score >= 65 ? "#38d6ff" : score >= 45 ? "#f5a623" : "#f2495c";
-  const banding = score >= 85 ? "Excellent" : score >= 65 ? "Good" : score >= 45 ? "Fair" : "Needs Review";
+  const progress =
+    circumference - (score / 100) * circumference;
+
+  const color =
+    score >= 85
+      ? "#34d399"
+      : score >= 65
+      ? "#38d6ff"
+      : score >= 45
+      ? "#f5a623"
+      : "#f2495c";
+
+  const banding =
+    score >= 85
+      ? "Excellent"
+      : score >= 65
+      ? "Good"
+      : score >= 45
+      ? "Fair"
+      : "Needs Review";
 
   return (
-    <div className="flex flex-col items-center">
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="#16283f" strokeWidth={stroke} fill="none" />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={stroke}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={progress}
-          style={{ transition: "stroke-dashoffset 0.8s ease" }}
-        />
-      </svg>
-      <div className="-mt-[135px] flex flex-col items-center">
-        <span className="text-5xl font-display font-bold">{score}</span>
-        <span className="text-xs text-slate-400">/100</span>
-      </div>
-      <div className="mt-6 text-center">
-        {label && <div className="text-xs tracking-wider text-slate-400 uppercase">{label}</div>}
-        <span
-          className="pill mt-2"
-          style={{ backgroundColor: `${color}22`, color }}
+    <div className="flex flex-col items-center shrink-0">
+      {/* Score circle */}
+      <div
+        className="relative"
+        style={{
+          width: size,
+          height: size,
+        }}
+      >
+        <svg
+          width={size}
+          height={size}
+          className="-rotate-90"
         >
-          {banding}
-        </span>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#16283f"
+            strokeWidth={stroke}
+            fill="none"
+          />
+
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={stroke}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={progress}
+            style={{
+              transition:
+                "stroke-dashoffset 0.8s ease",
+            }}
+          />
+        </svg>
+
+        {/* Score text stays centered inside circle */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-5xl font-display font-bold leading-none">
+            {score}
+          </span>
+
+          <span className="text-xs text-slate-400 mt-1">
+            /100
+          </span>
+        </div>
       </div>
+
+      {/* Text below circle */}
+      {label && (
+        <div className="mt-4 flex flex-col items-center text-center">
+          <div className="text-xs tracking-wider text-slate-400 uppercase">
+            {label}
+          </div>
+
+          <span
+            className="pill mt-2"
+            style={{
+              backgroundColor: `${color}22`,
+              color,
+            }}
+          >
+            {banding}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
