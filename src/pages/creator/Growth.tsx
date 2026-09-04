@@ -21,9 +21,17 @@ export default function Growth() {
     const seed = seeded(profile.id);
     const months = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
     let base = profile.subscribers * 0.85;
-    return months.map((m, i) => {
-      base += profile.subscribers * (0.02 + ((seed + i) % 5) * 0.008);
-      return { month: m, subs: Math.round(base) };
+    return months.map((month, i) => {
+      const variation =
+        0.01 +
+        ((seed + i * 7) % 11) * 0.006;
+
+      base += profile.subscribers * variation;
+
+      return {
+        month,
+        subs: Math.round(base),
+      };
     });
   }, [profile]);
 
@@ -49,17 +57,66 @@ export default function Growth() {
                 +{fmtNumber(trend[trend.length - 1].subs - trend[0].subs)}
               </span>
             </div>
-            <div className="flex items-end gap-4 h-48">
-              {trend.map((t) => (
-                <div key={t.month} className="flex-1 flex flex-col items-center gap-2">
-                  <div
-                    className="w-full rounded-t-lg bg-gradient-to-t from-brand-cyan/40 to-brand-cyan"
-                    style={{ height: `${(t.subs / maxSubs) * 100}%` }}
-                    title={fmtNumber(t.subs)}
-                  />
-                  <span className="text-xs text-slate-500">{t.month}</span>
-                </div>
-              ))}
+            <div className="h-48 w-full">
+              <svg
+                viewBox="0 0 600 180"
+                className="w-full h-full"
+                preserveAspectRatio="none"
+              >
+                <polyline
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-brand-cyan"
+                  points={trend
+                    .map((t, i) => {
+                      const x =
+                        trend.length === 1
+                          ? 300
+                          : (i / (trend.length - 1)) * 560 + 20;
+
+                      const y =
+                        160 -
+                        ((t.subs / maxSubs) * 130);
+
+                      return `${x},${y}`;
+                    })
+                    .join(" ")}
+                />
+
+                {trend.map((t, i) => {
+                  const x =
+                    trend.length === 1
+                      ? 300
+                      : (i / (trend.length - 1)) * 560 + 20;
+
+                  const y =
+                    160 -
+                    ((t.subs / maxSubs) * 130);
+
+                  return (
+                    <g key={t.month}>
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r="5"
+                        className="fill-brand-cyan"
+                      />
+
+                      <text
+                        x={x}
+                        y="178"
+                        textAnchor="middle"
+                        className="fill-slate-500 text-[11px]"
+                      >
+                        {t.month}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
             </div>
           </div>
 

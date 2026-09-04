@@ -5,6 +5,8 @@ export interface CreatorProfile {
   avatarUrl?: string;
   country?: string;
   description?: string;
+  latestVideoId?: string;
+  latestVideoTitle?: string;
   subscribers: number;
   totalViews: number;
   videoCount: number;

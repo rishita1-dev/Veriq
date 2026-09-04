@@ -391,6 +391,12 @@ async function fetchRecentEngagement(channelId: string){
     const videoTitles = videos.map(
       (v: any) => v.snippet?.title ?? ""
     );
+
+    const latestVideo = videos[0];
+
+    const latestVideoId = latestVideo?.id ?? "";
+    const latestVideoTitle = latestVideo?.snippet?.title ?? "";
+
     const views = stats.map((s: any) => Number(s.viewCount ?? 0));
     const likes = stats.map((s: any) => Number(s.likeCount ?? 0));
     const comments = stats.map((s: any) => Number(s.commentCount ?? 0));
@@ -404,7 +410,7 @@ async function fetchRecentEngagement(channelId: string){
     const totalViews = views.reduce((a: number, b: number) => a + b, 0);
     const engagementRate = totalViews > 0 ? (totalInteractions / totalViews) * 100 : 0;
 
-    return { avgViews: Math.round(avgViews), engagementRate: Math.round(engagementRate * 100) / 100,videoTitles,};
+    return { avgViews: Math.round(avgViews), engagementRate: Math.round(engagementRate * 100) / 100,videoTitles, latestVideoId, latestVideoTitle };
   } catch {
     return {
       avgViews: 0,
@@ -420,6 +426,8 @@ function mapChannelToProfile(
     avgViews: number;
     engagementRate: number;
     videoTitles: string[];
+    latestVideoId?: string;
+    latestVideoTitle?: string;
   }
 ): CreatorProfile {
   const stats = channel.statistics ?? {};

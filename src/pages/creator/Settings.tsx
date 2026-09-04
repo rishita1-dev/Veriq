@@ -19,23 +19,6 @@ export default function CreatorSettings() {
         <ToggleRow label="Weekly growth digest" defaultOn />
         <ToggleRow label="Allow brands to see contact details after 70%+ match" />
       </div>
-
-      <div className="card p-7 max-w-2xl">
-        <h2 className="font-bold mb-3">YouTube Data API</h2>
-        <p className="text-sm text-slate-400 mb-3">
-          Your dashboard, profile, and insights are powered by the YouTube Data API v3. Configure{" "}
-          <code className="text-brand-cyan">VITE_YOUTUBE_API_KEY</code> in your{" "}
-          <code className="text-brand-cyan">.env</code> file to pull live stats instead of modeled
-          data.
-        </p>
-        <span
-          className={`pill ${
-            isYoutubeConfigured() ? "bg-brand-green/15 text-brand-green" : "bg-brand-amber/15 text-brand-amber"
-          }`}
-        >
-          {isYoutubeConfigured() ? "API key detected" : "Using modeled data — no key found"}
-        </span>
-      </div>
     </AppShell>
   );
 }

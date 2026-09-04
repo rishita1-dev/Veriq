@@ -114,7 +114,7 @@ export default function Discovery() {
       {error && <p className="text-xs text-brand-red mb-6">{error}</p>}
 
       {selected && compatibility && (
-        <div className="card p-7 mb-10 grid lg:grid-cols-[auto_1fr_auto] gap-8 items-center">
+        <div className="card p-7 mb-10 grid lg:grid-cols-[280px_1fr_auto] gap-8 items-center">
           <ScoreRing score={selected.authenticityScore} size={160} stroke={12} />
           <div>
             <div className="flex items-center gap-3 mb-1 flex-wrap">
@@ -166,25 +166,66 @@ export default function Discovery() {
       <h2 className="text-xl font-bold mb-4">Suggested for {brand.category}</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
         {feed.map((c) => (
-          <button
+          <div
             key={c.id}
-            onClick={() => runSearch(c.handle.replace("@", ""))}
-            className="card p-5 text-left hover:border-brand-cyan/30 transition-colors"
+            className="card overflow-hidden hover:border-brand-cyan/30 transition-colors"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-ink-700 flex items-center justify-center text-sm font-semibold shrink-0">
-                {c.name.charAt(0)}
+            {/* YouTube video */}
+            {c.latestVideoId && (
+              <a
+                href={`https://www.youtube.com/watch?v=${c.latestVideoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative block aspect-video overflow-hidden group"
+              >
+                <img
+                  src={`https://i.ytimg.com/vi/${c.latestVideoId}/hqdefault.jpg`}
+                  alt={c.latestVideoTitle || `${c.name} YouTube video`}
+                  className="w-full h-full object-cover"
+                />
+
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full bg-black/70 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Play size={20} fill="white" className="text-white ml-1" />
+                  </div>
+                </div>
+              </a>
+            )}
+
+            {/* Creator information */}
+            <button
+              onClick={() => runSearch(c.handle.replace("@", ""))}
+              className="w-full p-5 text-left"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-10 w-10 rounded-full bg-ink-700 flex items-center justify-center text-sm font-semibold shrink-0">
+                  {c.name.charAt(0)}
+                </div>
+
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm truncate">
+                    {c.name}
+                  </div>
+                  <div className="text-xs text-slate-500 truncate">
+                    {c.handle}
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="font-semibold text-sm truncate">{c.name}</div>
-                <div className="text-xs text-slate-500 truncate">{c.handle}</div>
+
+              {c.latestVideoTitle && (
+                <div className="text-xs text-slate-400 mb-3 line-clamp-2">
+                  {c.latestVideoTitle}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>{fmtNumber(c.subscribers)} subs</span>
+                <span className="text-brand-cyan font-semibold">
+                  {c.authenticityScore} score
+                </span>
               </div>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>{fmtNumber(c.subscribers)} subs</span>
-              <span className="text-brand-cyan font-semibold">{c.authenticityScore} score</span>
-            </div>
-          </button>
+            </button>
+          </div>
         ))}
       </div>
     </AppShell>
