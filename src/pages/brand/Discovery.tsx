@@ -115,7 +115,37 @@ export default function Discovery() {
 
       {selected && compatibility && (
         <div className="card p-7 mb-10 grid lg:grid-cols-[280px_1fr_auto] gap-8 items-center">
-          <ScoreRing score={selected.authenticityScore} size={160} stroke={12} />
+          {selected.latestVideoId ? (
+            <a
+              href={`https://www.youtube.com/watch?v=${selected.latestVideoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative block overflow-hidden rounded-xl group"
+            >
+              <img
+                src={`https://img.youtube.com/vi/${selected.latestVideoId}/hqdefault.jpg`}
+                alt={selected.latestVideoTitle ?? "Latest YouTube video"}
+                className="w-full aspect-video object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                <div className="h-14 w-14 rounded-full bg-white flex items-center justify-center shadow-lg">
+                  <span className="text-black text-xl ml-1">▶</span>
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2">
+                <p className="text-white text-xs truncate">
+                  {selected.latestVideoTitle}
+                </p>
+              </div>
+            </a>
+        ) : (
+          <div className="w-full aspect-video rounded-xl bg-ink-700 flex items-center justify-center">
+            No recent video
+          </div>
+        )}
+                   
+            <ScoreRing score={selected.authenticityScore} size={160} stroke={12} />
           <div>
             <div className="flex items-center gap-3 mb-1 flex-wrap">
               <h2 className="text-2xl font-bold">{selected.name}</h2>
@@ -166,37 +196,28 @@ export default function Discovery() {
       <h2 className="text-xl font-bold mb-4">Suggested for {brand.category}</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
         {feed.map((c) => (
-          <div
+          <button
             key={c.id}
-            className="card overflow-hidden hover:border-brand-cyan/30 transition-colors"
+            onClick={() => runSearch(c.handle.replace("@", ""))}
+            className="card overflow-hidden text-left hover:border-brand-cyan/30 transition-colors"
           >
-            {/* YouTube video */}
             {c.latestVideoId && (
-              <a
-                href={`https://www.youtube.com/watch?v=${c.latestVideoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative block aspect-video overflow-hidden group"
-              >
+              <div className="relative">
                 <img
-                  src={`https://i.ytimg.com/vi/${c.latestVideoId}/hqdefault.jpg`}
-                  alt={c.latestVideoTitle || `${c.name} YouTube video`}
-                  className="w-full h-full object-cover"
+                  src={`https://img.youtube.com/vi/${c.latestVideoId}/mqdefault.jpg`}
+                  alt={c.latestVideoTitle ?? "Latest video"}
+                  className="w-full aspect-video object-cover"
                 />
 
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                  <div className="h-12 w-12 rounded-full bg-black/70 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Play size={20} fill="white" className="text-white ml-1" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-black/70 flex items-center justify-center">
+                    <span className="text-white text-sm ml-0.5">▶</span>
                   </div>
                 </div>
-              </a>
+              </div>
             )}
 
-            {/* Creator information */}
-            <button
-              onClick={() => runSearch(c.handle.replace("@", ""))}
-              className="w-full p-5 text-left"
-            >
+            <div className="p-5">
               <div className="flex items-center gap-3 mb-3">
                 <div className="h-10 w-10 rounded-full bg-ink-700 flex items-center justify-center text-sm font-semibold shrink-0">
                   {c.name.charAt(0)}
@@ -206,26 +227,22 @@ export default function Discovery() {
                   <div className="font-semibold text-sm truncate">
                     {c.name}
                   </div>
+
                   <div className="text-xs text-slate-500 truncate">
                     {c.handle}
                   </div>
                 </div>
               </div>
 
-              {c.latestVideoTitle && (
-                <div className="text-xs text-slate-400 mb-3 line-clamp-2">
-                  {c.latestVideoTitle}
-                </div>
-              )}
-
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span>{fmtNumber(c.subscribers)} subs</span>
+
                 <span className="text-brand-cyan font-semibold">
                   {c.authenticityScore} score
                 </span>
               </div>
-            </button>
-          </div>
+            </div>
+          </button>
         ))}
       </div>
     </AppShell>

@@ -28,7 +28,7 @@ const NICHES = [
 ];
 
 function detectNiche(title: string = "", description: string = "",videoTitles: string[]): string {
-  const text = `${title} ${description}`.toLowerCase();
+  const text = `${title} ${description} ${videoTitles.join(" ")}`.toLowerCase();
 
   const categories: Record<string, string[]> = {
     Comedy: [
@@ -455,6 +455,8 @@ function mapChannelToProfile(
     avatarUrl: snippet.thumbnails?.default?.url,
     country: snippet.country ?? "—",
     description: snippet.description?.slice(0, 160),
+    latestVideoId: engagement.latestVideoId,
+    latestVideoTitle: engagement.latestVideoTitle,
     subscribers,
     totalViews,
     videoCount,
