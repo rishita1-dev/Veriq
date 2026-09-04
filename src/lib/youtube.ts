@@ -27,7 +27,7 @@ const NICHES = [
   "Sports",
 ];
 
-function detectNiche(title: string = "", description: string = ""): string {
+function detectNiche(title: string = "", description: string = "",videoTitles: string[]): string {
   const text = `${title} ${description}`.toLowerCase();
 
   const categories: Record<string, string[]> = {
@@ -359,7 +359,7 @@ export async function fetchCreatorByHandle(
   }
 }
 
-async function fetchRecentEngagement(channelId: string) {
+async function fetchRecentEngagement(channelId: string){
   try {
     const channelRes = await ytFetch("channels", {
       part: "contentDetails",
@@ -367,7 +367,7 @@ async function fetchRecentEngagement(channelId: string) {
     });
     const uploadsPlaylist =
       channelRes.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-    if (!uploadsPlaylist) return { avgViews: 0, engagementRate: 0 };
+    if (!uploadsPlaylist) return { avgViews: 0, engagementRate: 0,videoTitles: [], };
 
     const playlistRes = await ytFetch("playlistItems", {
       part: "contentDetails",
@@ -378,7 +378,7 @@ async function fetchRecentEngagement(channelId: string) {
       .map((i: any) => i.contentDetails?.videoId)
       .filter(Boolean)
       .join(",");
-    if (!videoIds) return { avgViews: 0, engagementRate: 0 };
+    if (!videoIds) return { avgViews: 0, engagementRate: 0,videoTitles: [], };
 
     const videosRes = await ytFetch("videos", {
       part: "statistics,snippet",
